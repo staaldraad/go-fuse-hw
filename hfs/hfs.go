@@ -11,12 +11,16 @@ type EntryGetter interface {
 	GetDirentType() fuse.DirentType
 }
 
-type FS struct{}
-
-func NewFS() FS {
-	return FS{}
+type FS struct {
+	DynamicFile *File
 }
 
-func (f FS) Root() (fs.Node, error) {
-	return NewDir(), nil
+var _ fs.FS = (*FS)(nil)
+
+func NewFS() *FS {
+	return &FS{}
+}
+
+func (f *FS) Root() (fs.Node, error) {
+	return &Dir{fs: f}, nil
 }
