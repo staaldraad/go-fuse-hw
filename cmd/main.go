@@ -33,6 +33,7 @@ func main() {
 		mountpoint,
 		fuse.FSName("hfs"),
 		fuse.Subtype("hfs"),
+		fuse.AllowOther(),
 	)
 	if err != nil {
 		log.Fatal(err)

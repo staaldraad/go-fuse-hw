@@ -17,7 +17,7 @@ var _ fs.Node = (*Dir)(nil)
 
 func (d *Dir) Attr(ctx context.Context, a *fuse.Attr) error {
 	a.Inode = 1
-	a.Mode = os.ModeDir | 0o555
+	a.Mode = os.ModeDir | 0o755
 	return nil
 }
 
@@ -32,7 +32,7 @@ func (d *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 }
 
 var dirDirs = []fuse.Dirent{
-	{Inode: 2, Name: "clock", Type: fuse.DT_Char},
+	{Inode: 2, Name: "clock", Type: fuse.DT_File},
 }
 
 var _ fs.HandleReadDirAller = (*Dir)(nil)

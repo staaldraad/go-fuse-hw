@@ -2,6 +2,7 @@ package hfs
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -24,13 +25,23 @@ type File struct {
 
 var _ fs.Node = (*File)(nil)
 
+type PruneFile struct {
+	Service      string        `json:"service"`
+	ServiceUsers []ServiceUser `json:"service_users"`
+}
+
+type ServiceUser struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+var fileContents = []byte(`{"service":"service_blah","service_users":[{"username":"_aiven", "password":"AVNS_2112321312"},{"username":"avnadmin", "password":"AVNS_12312321312"}]}`)
+
 func (f *File) Attr(ctx context.Context, a *fuse.Attr) error {
 	log.Println("Attr")
 	a.Inode = 2
 	a.Mode = 0o444
-	reader, size := fetchFile(f.Name.Load().(string))
-	f.Reader.Store(reader)
-	a.Size = uint64(size)
+	a.Size = uint64(len(fileContents))
 	return nil
 }
 
@@ -38,10 +49,11 @@ var _ fs.NodeOpener = (*File)(nil)
 
 func (f *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
 	log.Println("Open")
+	log.Println(req.Pid)
 	if !req.Flags.IsReadOnly() {
 		return nil, fuse.Errno(syscall.EACCES)
 	}
-	resp.Flags |= fuse.OpenKeepCache
+	//resp.Flags |= fuse.OpenKeepCache
 	return f, nil
 }
 
@@ -51,12 +63,28 @@ var _ fs.HandleReader = (*File)(nil)
 
 func (f *File) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
 	log.Println("Read")
-	var t []byte
-	reader := f.Reader.Load()
-	(*reader).Read(t)
-	log.Println(t)
-	fuseutil.HandleRead(req, resp, t)
+	if req.Uid == 1000 {
+		fuseutil.HandleRead(req, resp, fileContents)
+	} else {
+		redactContents := redacted(fileContents)
+		fuseutil.HandleRead(req, resp, redactContents)
+	}
+	f.Fuse.InvalidateNodeData(f)
 	return nil
+}
+
+func redacted(contents []byte) []byte {
+
+	var dat PruneFile
+	if err := json.Unmarshal(contents, &dat); err != nil {
+		panic(err)
+	}
+	log.Println(dat.Service)
+	for k := range dat.ServiceUsers {
+		dat.ServiceUsers[k].Password = "REDACTED"
+	}
+	c, _ := json.Marshal(dat)
+	return c
 }
 
 // type File struct {
