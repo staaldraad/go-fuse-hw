@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	"bazil.org/fuse"
-	"bazil.org/fuse/fs"
+	"github.com/anacrolix/fuse"
+	"github.com/anacrolix/fuse/fs"
 	"github.com/staaldraad/fusefs-hello-world/hfs"
 )
 
@@ -33,6 +33,7 @@ func main() {
 		mountpoint,
 		fuse.FSName("hfs"),
 		fuse.Subtype("hfs"),
+		fuse.NoAppleDouble(),
 	)
 	if err != nil {
 		log.Fatal(err)

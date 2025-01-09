@@ -2,7 +2,6 @@ module github.com/staaldraad/fusefs-hello-world
 
 go 1.20
 
-require (
-	bazil.org/fuse v0.0.0-20230120002735-62a210ff1fd5 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-)
+require github.com/anacrolix/fuse v0.4.0
+
+require golang.org/x/sys v0.10.0 // indirect
